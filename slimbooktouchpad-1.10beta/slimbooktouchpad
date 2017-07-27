@@ -1,0 +1,298 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+import os
+import dbus
+import signal
+import json
+import webbrowser
+import sys
+import subprocess
+import re
+import imp
+import ConfigParser
+from os.path import expanduser
+
+from urllib2 import Request, urlopen, URLError
+from gi.repository import Gtk as Gtk
+from gi.repository import AppIndicator3 as appindicator
+from gi.repository import Notify as notify
+
+user = expanduser("~")
+if (os.path.isfile(user + '/.config/slimbooktouchpad/slimbooktouchpad.conf')):
+	os.system('cat ' + user + '/.config/slimbooktouchpad/slimbooktouchpad.conf')
+else:
+	os.system('mkdir ' + user + '/.config/slimbooktouchpad/')
+	os.system('chmod 777 ' + user + '/.config/slimbooktouchpad/')
+	os.system('cp /usr/share/slimbooktouchpad/slimbooktouchpad.conf ' + user + '/.config/slimbooktouchpad/')
+	os.system('chmod 777 ' + user + '/.config/slimbooktouchpad/slimbooktouchpad.conf')
+	if (os.path.isfile(user + '/.config/autostart')):
+		os.system('slimbooktouchpad')
+	else:
+		os.system('mkdir ' + user + '/.config/autostart/')
+		os.system('chmod 777 ' + user + '/.config/autostart/')
+		os.system('cp /usr/share/slimbooktouchpad/slimbooktouchpad-autostart.desktop ' + user + '/.config/autostart/')
+		os.system('chmod 777 ' + user + '/.config/autostart/slimbooktouchpad-autostart.desktop')
+
+config = ConfigParser.ConfigParser()
+config.read(user + '/.config/slimbooktouchpad/slimbooktouchpad.conf')
+valor1 = str(float(config.get('CONFIGURATION', 'velocidad')))
+valor2 = str(int(config.get('CONFIGURATION', 'deccon')))
+valor3 = str(int(config.get('CONFIGURATION', 'decad')))
+valor4 = str(int(config.get('CONFIGURATION', 'hor')))
+conf = str(int(config.get('CONFIGURATION', 'conf')))
+icono = int(config.get('CONFIGURATION', 'icono'))
+
+if (os.path.isfile("/usr/share/man/man4/libinput.4.gz") or os.path.isfile("/usr/share/man/man4/libinput.5.gz")):
+	preferences = imp.load_source("preferences", "/usr/share/slimbooktouchpad/preferences2")
+else:
+	preferences = imp.load_source("preferences", "/usr/share/slimbooktouchpad/preferences")
+
+WEBICON = '/usr/share/slimbooktouchpad/images/slimbook.png'
+TWITTERICON = '/usr/share/slimbooktouchpad/images/twitter.png'
+FACEBOOKICON = '/usr/share/slimbooktouchpad/images/facebook.png'
+YOUTUBEICON = '/usr/share/slimbooktouchpad/images/youtube.png'
+GOOGLEICON = '/usr/share/slimbooktouchpad/images/google.png'
+BUGICON = '/usr/share/slimbooktouchpad/images/bug.png'
+ENABLED = '/usr/share/slimbooktouchpad/images/touchpad-enabled.png'
+DISABLED = '/usr/share/slimbooktouchpad/images/touchpad-disabled.png'
+
+APPINDICATOR_ID = 'myappindicator'
+indicator = appindicator.Indicator.new(APPINDICATOR_ID, ENABLED, appindicator.IndicatorCategory.SYSTEM_SERVICES)
+
+print icono
+def main():
+	if icono == 1:
+		indicator.set_status(appindicator.IndicatorStatus.ACTIVE)
+	else:
+		indicator.set_status(appindicator.IndicatorStatus.PASSIVE)
+	indicator.set_menu(build_menu())
+	notify.init(APPINDICATOR_ID)
+	Gtk.main()
+
+def build_menu():
+	menu = Gtk.Menu()
+	# Instancia separador
+	item_separator = Gtk.SeparatorMenuItem()
+	# Instancia imágenes
+	icon_disabled = Gtk.Image()
+	icon_disabled.set_from_file(DISABLED)
+	icon_enabled = Gtk.Image()
+	icon_enabled.set_from_file(ENABLED)
+	#
+	item_disable = Gtk.ImageMenuItem('Disable touchpad')
+	item_disable.connect('activate', disable_touchpad)
+	item_disable.set_image(icon_disabled)
+	item_disable.set_always_show_image(True)
+	menu.append(item_disable)
+	#
+	item_enable = Gtk.ImageMenuItem('Enable touchpad')
+	item_enable.connect('activate', enable_touchpad)
+	item_enable.set_image(icon_enabled)
+	item_enable.set_always_show_image(True)
+	menu.append(item_enable)
+	# Separador
+	menu.append(item_separator)
+	# Botón de preferences
+	item_preferences = Gtk.MenuItem('Preferences')
+	item_preferences.connect('activate', on_preferences)
+	menu.append(item_preferences)
+	# Separador
+	# Botón de about
+	'''item_about = Gtk.MenuItem('About')
+	item_about.set_submenu(get_about_menu())
+	menu.append(item_about)'''
+	# Separador
+	menu.append(item_separator)
+	# Botón de salir
+	item_quit = Gtk.MenuItem('Quit')
+	item_quit.connect('activate', quit)
+	menu.append(item_quit)
+	# Mostrar menú
+	menu.show_all()
+	return menu
+
+#def get_about_menu():
+	'''about_menu = Gtk.Menu()
+	about_menu = Gtk.Menu()
+	about_menu = Gtk.Menu()
+	#
+	web = add_menu(about_menu,
+			text='Homepage',
+			conector_event='activate',
+			conector_action=lambda x: webbrowser.open(
+				'http://slimbook.es/'))
+	web.set_image(Gtk.Image.new_from_file(WEBICON))
+	web.set_always_show_image(True)
+	#
+	# bug = add_menu(about_menu,
+	#		text=('Report a bug'),
+	#		conector_event='activate',
+	#		conector_action=lambda x: webbrowser.open(
+	#			'https://bugs.launchpad.net/~slimbook'))
+	# bug.set_image(Gtk.Image.new_from_file(BUGICON))
+        # bug.set_always_show_image(True)
+	#
+	add_menu(about_menu)
+	#
+	twitter = add_menu(about_menu,
+			text=('Follow us on Twitter'),
+			conector_event='activate',
+			conector_action=lambda x: webbrowser.open(
+				'https://twitter.com/SlimbookEs'))
+	twitter.set_image(Gtk.Image.new_from_file(TWITTERICON))
+        twitter.set_always_show_image(True)
+	#
+	facebook = add_menu(about_menu,
+			text=('Follow us on Facebook'),
+			conector_event='activate',
+			conector_action=lambda x: webbrowser.open(
+				'http://www.facebook.com/slimbook.es'))
+	facebook.set_image(Gtk.Image.new_from_file(FACEBOOKICON))
+        facebook.set_always_show_image(True)
+	#
+	youtube = add_menu(about_menu,
+			text=('Follow us on YouTube'),
+			conector_event='activate',
+			conector_action=lambda x: webbrowser.open(
+				'http://youtube.com/c/SlimbookEs101'))
+	youtube.set_image(Gtk.Image.new_from_file(YOUTUBEICON))
+        youtube.set_always_show_image(True)
+	#
+	google = add_menu(about_menu,
+			text=('Follow us on Google+'),
+			conector_event='activate',
+			conector_action=lambda x: webbrowser.open(
+				'https://www.google.com/+SlimbookEs101'))
+	google.set_image(Gtk.Image.new_from_file(GOOGLEICON))
+        google.set_always_show_image(True)
+	#
+	# add_menu(about_menu)
+	#
+	# add_menu(about_menu,
+	# 	text=('Slimbook Touchpad'),
+	# 	conector_event='activate',
+	#	conector_action=lambda x: webbrowser.open(
+	#		'https://twitter.com/SlimbookEs'))
+	#
+	return(about_menu)
+
+def add_menu(menu, text=None, icon=None, conector_event=None,
+             conector_action=None):
+    if text is not None:
+        menu_item = Gtk.ImageMenuItem.new_with_label(text)
+        if icon:
+            image = Gtk.Image.new_from_file(icon)
+            menu_item.set_image(image)
+            menu_item.set_always_show_image(True)
+    else:
+        if icon is None:
+            menu_item = Gtk.SeparatorMenuItem()
+        else:
+            menu_item = Gtk.ImageMenuItem.new_from_file(icon)
+            menu_item.set_always_show_image(True)
+    if conector_event is not None and conector_action is not None:
+        menu_item.connect(conector_event, conector_action)
+    menu_item.show()
+    menu.append(menu_item)'''
+    #return menu_item
+
+def on_preferences(_):
+        preferences_dialog = preferences.PreferencesDialog()
+	if preferences_dialog.run() == Gtk.ResponseType.ACCEPT:
+            preferences_dialog.close_ok()
+        preferences_dialog.hide()
+        preferences_dialog.destroy()
+
+def disable_touchpad(_):
+	notify.Notification.new("Touchpad disabled", "Your laptop's touchpad has been disabled", None).show()
+	device_id = getDeviceId()
+	os.system('xinput -disable ' + device_id)
+	indicator.set_icon(DISABLED)
+
+def enable_touchpad(_):
+	notify.Notification.new("Touchpad enabled", "Your laptop's touchpad has been enabled", None).show()
+	device_id = getDeviceId()
+	os.system('xinput -enable ' + device_id)
+	indicator.set_icon(ENABLED)
+
+def disable_typing(_):
+    print("Disabled touchpad when typing")
+
+def getDeviceId():
+  try:
+    data = subprocess.check_output(['xinput', '--list'])
+  except Exception:
+    print("xinput not found!")
+    sys.exit();
+
+  deviceId = 'none'
+
+  for line in data.splitlines():
+    line = line.lower()
+    if 'imexps/2' in line and 'pointer' in line:
+      line = line.strip()
+      match = re.search('id=([0-9]+)', line)
+      deviceId = str(match.group(1))
+    elif 'synaptics' in line and 'pointer' in line:
+      line = line.strip()
+      match = re.search('id=([0-9]+)', line)
+      deviceId = str(match.group(1))
+    elif 'imps/2' in line and 'pointer' in line:
+      line = line.strip()
+      match = re.search('id=([0-9]+)', line)
+      deviceId = str(match.group(1))
+
+  if deviceId == 'none':
+    print('Touch Device not found')
+    sys.exit();
+
+  return deviceId
+deviceId = getDeviceId()
+if (os.path.isfile("/usr/share/man/man4/libinput.4.gz") or os.path.isfile("/usr/share/man/man4/libinput.5.gz")):
+    form6 = 'xinput --set-prop ' + deviceId + ' "libinput Natural Scrolling Enabled" 1'
+    form7 = 'xinput --set-prop ' + deviceId + ' "libinput Natural Scrolling Enabled" 0'
+    lib1 = 'xinput --set-prop ' + deviceId + ' "libinput Accel Speed" '
+    vel2 = float(valor1)/10
+    os.system(lib1 + str(vel2))
+    print lib1 +  str(vel2)
+    if conf == '0':
+        deviceId = getDeviceId()
+        os.system('xinput --set-prop ' + deviceId + ' "Device Enabled" 1')
+        os.system('xinput --set-prop ' + deviceId + ' "libinput Accel Speed" 0')
+        os.system(form7)
+    else:
+        os.system('xinput --set-prop ' + deviceId + ' "libinput Accel Speed" ' + valor1)
+else:
+    form6 = 'xinput --set-prop ' + deviceId + ' "Evdev Scrolling Distance" -1 -1 -1'
+    form7 = 'xinput --set-prop ' + deviceId + ' "Evdev Scrolling Distance" 1 1 1'
+    if conf == '0':
+        deviceId = getDeviceId()
+        os.system('xinput --set-prop ' + deviceId + ' "Device Enabled" 1')
+        os.system('xinput --set-prop ' + deviceId + ' "Coordinate Transformation Matrix" 1, 0, 0, 0, 1, 0, 0, 0, 1')
+        os.system('xinput --set-prop ' + deviceId + ' "Device Accel Constant Deceleration" 1')
+        os.system('xinput --set-prop ' + deviceId + ' "Device Accel Adaptive Deceleration" 1')
+        os.system('xinput --set-prop ' + deviceId + ' "Device Accel Velocity Scaling" 10')
+    else:
+        lib1 = 'xinput --set-prop ' + deviceId + ' "Device Accel Velocity Scaling" '
+        lib2 = 'xinput --set-prop ' + deviceId + ' "Device Accel Constant Deceleration" '
+        lib3 = 'xinput --set-prop ' + deviceId + ' "Device Accel Adaptive Deceleration" '
+        print lib1 + valor1
+        os.system(lib1 + valor1)
+        os.system(lib2 + valor2)
+        os.system(lib3 + valor3)
+if valor4 == '0':
+    os.system(form7)
+    print 'Desactivado natural scrolling' + form7
+elif valor4 == '1':
+    os.system(form6)
+    print 'Activado natural scrolling' + form6
+else:
+    print 'Cosas erroneas' + valor4
+def quit(_):
+    notify.uninit()
+    Gtk.main_quit()
+
+if __name__ == "__main__":
+    signal.signal(signal.SIGINT, signal.SIG_DFL)
+    main()
