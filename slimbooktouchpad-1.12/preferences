@@ -1,0 +1,388 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+import gi
+from gi.repository import Gtk
+import os
+from os.path import expanduser
+import shutil
+import getpass
+import ConfigParser
+import subprocess
+import re
+import sys
+import webbrowser
+
+user = expanduser("~")
+
+config = ConfigParser.ConfigParser()
+config.read(user + '/.config/slimbooktouchpad/slimbooktouchpad.conf')
+
+class PreferencesDialog(Gtk.Dialog):
+    def __init__(self):
+	#
+        Gtk.Dialog.__init__(self,
+                            'Slimbook Touchpad Preferences',
+                            None,
+                            Gtk.DialogFlags.MODAL |
+                            Gtk.DialogFlags.DESTROY_WITH_PARENT,
+                            (Gtk.STOCK_CANCEL, Gtk.ResponseType.REJECT,
+                                Gtk.STOCK_OK, Gtk.ResponseType.ACCEPT))
+        self.set_position(Gtk.WindowPosition.CENTER_ALWAYS)
+        self.connect('close', self.close_ok)
+        #
+        vbox0 = Gtk.VBox(spacing=5)
+        vbox0.set_border_width(5)
+        self.get_content_area().add(vbox0)
+        # ***************************************************************
+        notebook = Gtk.Notebook.new()
+        vbox0.add(notebook)
+        # ***************************************************************
+        vbox11 = Gtk.VBox(spacing=5)
+        vbox11.set_border_width(5)
+        notebook.append_page(vbox11, Gtk.Label.new('Settings'))
+        frame11 = Gtk.Frame()
+        vbox11.pack_start(frame11, False, True, 1)
+        table11 = Gtk.Table(1, 1, False)
+        frame11.add(table11)
+        # ***************************************************************
+        label11 = Gtk.Label('Autostart application:')
+        label11.set_alignment(0, 0.5)
+        table11.attach(label11, 0, 1, 0, 1, xpadding=5, ypadding=5)
+        self.switch1 = Gtk.Switch()
+	self.switch1.connect("notify::active", self.on_switch_activated)
+	self.switch1.set_active(self.check_autostart(self.switch1))
+        table11.attach(self.switch1, 1, 2, 0, 1,
+                       xpadding=5,
+                       ypadding=5,
+                       xoptions=Gtk.AttachOptions.SHRINK)
+    #(0, 0)
+        label11 = Gtk.Label('Natural Scrolling:')
+        label11.set_alignment(0, 0.5)
+        table11.attach(label11, 0, 1, 1, 2, xpadding=5, ypadding=5)
+        self.switch2 = Gtk.Switch()
+	self.switch2.connect("notify::active", self.on_switch_activated2)
+	self.switch2.set_active(self.check_autostart2(self.switch2))
+        table11.attach(self.switch2, 1, 2, 1, 2,
+                       xpadding=5,
+                       ypadding=5,
+                       xoptions=Gtk.AttachOptions.SHRINK)
+    #(0, 1)
+        label11 = Gtk.Label('Icon on the taskbar (require restart app):')
+        label11.set_alignment(0, 0.5)
+        table11.attach(label11, 0, 1, 8, 9, xpadding=5, ypadding=5)
+        self.switch3 = Gtk.Switch()
+	self.switch2.connect("notify::active", self.on_switch_activated3)
+	self.switch3.set_active(self.check_autostart3(self.switch3))
+        table11.attach(self.switch3, 1, 2, 8, 9,
+                       xpadding=5,
+                       ypadding=5,
+                       xoptions=Gtk.AttachOptions.SHRINK)
+	# (1, 0)
+	label11 = Gtk.Label('Velocity Scaling:')
+        label11.set_alignment(0, 0.5)
+        table11.attach(label11, 0, 1, 7, 8, xpadding=5, ypadding=5)
+	# (1, 1)
+	self.scale1 = Gtk.Scale()
+	self.scale1.set_size_request(200, 10)
+	max_value = self.check_value_max()
+        self.scale1.set_adjustment(Gtk.Adjustment(float(max_value), 1, 100, 5, 5, 0))
+	self.scale1.set_digits(0)
+	self.scale1.set_hexpand(True)
+	table11.attach(self.scale1, 1, 2, 7, 8, xpadding=5, ypadding=5, xoptions=Gtk.AttachOptions.FILL)
+	# (2, 0)
+	label11 = Gtk.Label('Constant Deceleration:')
+        label11.set_alignment(0, 0.5)
+        table11.attach(label11, 0, 1, 2, 3, xpadding=5, ypadding=5)
+	# (2, 1)
+	self.scale2 = Gtk.Scale()
+	self.scale2.set_size_request(200, 10)
+	min_vaule = self.check_vaule_min()
+        self.scale2.set_adjustment(Gtk.Adjustment(int(min_vaule), 1, 20, 5, 5, 0))
+	self.scale2.set_digits(0)
+	self.scale2.set_hexpand(True)
+	table11.attach(self.scale2, 1, 2, 2, 3, xpadding=5, ypadding=5, xoptions=Gtk.AttachOptions.FILL)
+	# (3, 0)
+	label11 = Gtk.Label('Adaptive Deceleration:')
+        label11.set_alignment(0, 0.5)
+        table11.attach(label11, 0, 1, 3, 4, xpadding=5, ypadding=5)
+	# (3, 1)
+	self.scale3 = Gtk.Scale()
+	self.scale3.set_size_request(200, 10)
+	men_vaule = self.check_vaule_men()
+        self.scale3.set_adjustment(Gtk.Adjustment(int(men_vaule), 1, 20, 5, 5, 0))
+	self.scale3.set_digits(0)
+	self.scale3.set_hexpand(True)
+	table11.attach(self.scale3, 1, 2, 3, 4, xpadding=5, ypadding=5, xoptions=Gtk.AttachOptions.FILL)
+	# (4, 0)
+	label11 = Gtk.Label('If you have the autostart activated and the icon hide,')
+        label11.set_alignment(0, 0.5)
+        table11.attach(label11, 0, 1, 9, 10, xpadding=5, ypadding=5)
+	# (4, 1)
+	label11 = Gtk.Label('the app will be executed with the icon hide')
+        label11.set_alignment(0, 0)
+        table11.attach(label11, 0, 1, 10, 11, xpadding=5, ypadding=0)
+	# (4, 1)
+	label11 = Gtk.Label('(once you restart the system)')
+        label11.set_alignment(0, 0)
+        table11.attach(label11, 0, 1, 11, 12, xpadding=5, ypadding=0)
+    # ***************************************************************
+        vbox11 = Gtk.VBox(spacing=5)
+        vbox11.set_border_width(5)
+        notebook.append_page(vbox11, Gtk.Label.new('Extra'))
+        frame11 = Gtk.Frame()
+        vbox11.pack_start(frame11, False, True, 1)
+        table2 = Gtk.Table(1, 1, False)
+        frame11.add(table2)
+	# FIRST  COLUMN
+	# (0, 0)
+	label21 = Gtk.Label('')
+	label21.set_markup('<b>Two and three fingers help:</b>')
+        label21.set_alignment(0, 0.5)
+        table2.attach(label21, 0, 1, 0, 1,
+                      xpadding=5, ypadding=5)
+	# (0, 1)
+	label21 = Gtk.LinkButton('https://slimbook.es/tutoriales/slimbook/36-uso-del-touchpad', label='Tutorial')
+        label21.set_alignment(0, 0.5)
+        table2.attach(label21, 1, 2, 0, 1,
+                      xpadding=5, ypadding=5)
+	# (1, 0)
+	label21 = Gtk.Label('')
+	label21.set_markup('<b>¿Libinput or Evdev?:</b>')
+        label21.set_alignment(0, 0.5)
+        table2.attach(label21, 0, 1, 1, 2,
+                      xpadding=5, ypadding=5)
+	# (1, 1)
+	label21 = Gtk.Label('Using Evdev')
+        label21.set_alignment(0, 0.5)
+        table2.attach(label21, 1, 2, 1, 2,
+                      xpadding=5, ypadding=5)
+	# (2, 0)
+	label21 = Gtk.Label('')
+	label21.set_markup('<b>Install libinput:</b>')
+        label21.set_alignment(0, 0.5)
+        table2.attach(label21, 0, 1, 2, 3,
+                      xpadding=5, ypadding=5)
+	# (2, 1)
+	label21 = Gtk.Button("Install")
+	label21.connect("clicked", self.on_install)
+	table2.attach(label21, 1, 2, 2, 3,
+                      xpadding=5, ypadding=5)
+	# (3, 0)
+	label21 = Gtk.Label('')
+	label21.set_markup('<b>Homepage:</b>')
+        label21.set_alignment(0, 0.5)
+        table2.attach(label21, 0, 1, 4, 5,
+                      xpadding=5, ypadding=5)
+	# (3, 1)
+	label21 = Gtk.LinkButton('https://slimbook.es/')
+	WEBICON = '/usr/share/slimbooktouchpad/images/logo1.jpg'
+	label21.set_image(Gtk.Image.new_from_file(WEBICON))
+	label21.set_always_show_image(True)
+	table2.attach(label21, 1, 2, 4, 5,
+                      xpadding=5, ypadding=5)
+        self.show_all()
+
+
+    def check_autostart(self, switch1):
+	active = None
+	user = getpass.getuser()
+	if (os.path.isfile("/home/" + user + "/.config/autostart/slimbooktouchpad-autostart.desktop")):
+	    active = True
+	else:
+        #os.system("mkdir " + user +  "/.config/autostart")
+	    active = False
+
+	print(active)
+	return active
+
+    def check_autostart3(self, switch2):
+	stat3 = str(int(config.get('CONFIGURATION', 'icono')))
+	active3 = None
+	user3 = getpass.getuser()
+	if stat3 == '1':
+		active3 = True
+	else:
+		active3 = False
+	print(active3)
+	return active3
+
+    def check_autostart2(self, switch2):
+	stat2 = str(int(config.get('CONFIGURATION', 'hor')))
+	active2 = None
+	user2 = getpass.getuser()
+	if stat2 == '1':
+		active2 = True
+	else:
+		active2 = False
+
+	print(active2)
+	return active2
+
+    def check_value_max(_):
+	max_velocidad = config.get('CONFIGURATION', 'Velocidad')
+	return max_velocidad
+
+    def check_vaule_min(_):
+	max_deccon = config.get('CONFIGURATION', 'deccon')
+	return max_deccon
+
+    def check_vaule_men(_):
+	max_decad = config.get('CONFIGURATION', 'decad')
+	return max_decad
+
+    def on_switch_activated(self, switch1):
+	if switch1.get_active():
+	    state = "on"
+	    return state
+	else:
+	    state = "off"
+	    return state
+	print("Switch ", state)
+
+    def on_switch_activated2(self, switch2):
+	if switch2.get_active():
+	    state2 = "on"
+	    return state2
+	else:
+	    state2 = "off"
+	    return state2
+
+	print("Switch ", state2)
+
+    def on_switch_activated3(self, switch2):
+	if switch3.get_active():
+	    state3 = "on"
+	    return state2
+	else:
+	    state3 = "off"
+
+	    return state3
+
+	print("Switch ", state3)
+
+    def on_install(self, widget):
+        install = 'pkexec apt-get install -y xserver-xorg-input-libinput'
+        os.system(install)
+        if (os.path.isfile("/usr/share/man/man4/libinput.4.gz") or os.path.isfile("/usr/share/man/man4/libinput.5.gz")):
+            widget.set_label("¡Libinput installed! Restart your system")
+        else:
+            widget.set_label("Installation failed")
+        return  install
+
+    def messagedialog(self, title, message):
+        dialog = Gtk.MessageDialog(None,
+                                   Gtk.DialogFlags.MODAL,
+                                   Gtk.MessageType.INFO,
+                                   buttons=Gtk.ButtonsType.OK)
+        dialog.set_markup("<b>%s</b>" % title)
+        dialog.format_secondary_markup(message)
+        dialog.run()
+        dialog.destroy()
+
+    def close_ok(self):
+        stat = self.on_switch_activated(self.switch1)
+        stat2 = self.on_switch_activated2(self.switch2)
+        stat3 = self.on_switch_activated2(self.switch3)
+        device_id = getDeviceId()
+        form8 = 'xinput --set-prop ' + device_id + ' "Evdev Scrolling Distance" 1 1 1'
+        form9 = 'xinput --set-prop ' + device_id + ' "Evdev Scrolling Distance" -1 -1 -1'
+        if stat2 == "on":
+            os.system(form9)
+            print form9
+        elif stat2 == "off":
+            os.system(form8)
+            print form8
+	print("Autostart: " + stat)
+	if stat == "on":
+		os.system("cp /usr/share/slimbooktouchpad/slimbooktouchpad-autostart.desktop ~/.config/autostart/")
+	elif stat == "off":
+		os.system("rm -rf ~/.config/autostart/slimbooktouchpad-autostart.desktop")
+	else:
+		print("Cosas erróneas")
+	print("Icono: " + stat2)
+	if stat3 == "on":
+		config.set('CONFIGURATION', 'icono', str(int(1)))
+	elif stat3 == "off":
+		config.set('CONFIGURATION', 'icono', str(int(0)))
+	else:
+		print("Parámetros erróneos.")
+
+	deviceId = getDeviceId()
+	lib1 = ' "Device Accel Velocity Scaling" '
+	lib2 = ' "Device Accel Constant Deceleration" '
+	lib3 = ' "Device Accel Adaptive Deceleration" '
+	lib4 = ' "Evdev Scrolling Distance" '
+	from ConfigParser import SafeConfigParser
+	with open(user + '/.config/slimbooktouchpad/slimbooktouchpad.conf', 'w') as f:
+		def on_save_configuration(self, scale1, scale2, scale3, scale4, scale5, scale6, config):
+			print 'El valor es: ',str(int(self.scale1.get_value()))
+	config.set('CONFIGURATION', 'Velocidad', str(int(self.scale1.get_value())))
+        form1 = 'xinput --set-prop ' + deviceId  + lib1
+    	os.system(form1 + str(int(self.scale1.get_value())))
+        print(form1 + str(int(self.scale1.get_value())))
+	config.set('CONFIGURATION', 'deccon', str(int(self.scale2.get_value())))
+        form2 = 'xinput --set-prop ' + deviceId +  lib2
+    	os.system(form2 + str(int(self.scale2.get_value())))
+        print(form2 + str(int(self.scale2.get_value())))
+	config.set('CONFIGURATION', 'decad', str(int(self.scale3.get_value())))
+        form3 = 'xinput --set-prop ' + deviceId + lib3
+    	os.system(form3 + str(int(self.scale3.get_value())))
+        print(form3 + str(int(self.scale3.get_value())))
+	config.set('CONFIGURATION', 'hor', str(int(self.switch2.get_active())))
+        form4 = 'xinput --set-prop ' + deviceId + lib4
+	config.set('CONFIGURATION', 'conf', str(int(1)))
+
+	with open(user + '/.config/slimbooktouchpad/slimbooktouchpad.conf', 'wb') as configfile:
+		config.write(configfile)
+def getDeviceId():
+  try:
+    data = subprocess.check_output(['xinput', '--list'])
+  except Exception:
+    print("xinput not found!")
+    sys.exit();
+
+  deviceId = 'none'
+
+  for line in data.splitlines():
+    line = line.lower()
+    if 'imexps/2' in line and 'pointer' in line:
+      line = line.strip()
+      match = re.search('id=([0-9]+)', line)
+      deviceId = str(match.group(1))
+      print deviceId
+    elif 'imps/2' in line and 'pointer' in line:
+      line = line.strip()
+      match = re.search('id=([0-9]+)', line)
+      deviceId = str(match.group(1))
+      print deviceId
+    elif 'synaptics' in line and 'pointer' in line:
+      line = line.strip()
+      match = re.search('id=([0-9]+)', line)
+      deviceId = str(match.group(1))
+      print deviceId
+  if deviceId == 'none':
+    print('Touch Device not found')
+    sys.exit();
+
+  return deviceId
+
+def messagedialog(self, title, message):
+        dialog = Gtk.MessageDialog(None,
+                               Gtk.DialogFlags.MODAL,
+                               Gtk.MessageType.INFO,
+                               buttons=Gtk.ButtonsType.OK)
+        dialog.set_markup("<b>%s</b>" % title)
+        dialog.format_secondary_markup(message)
+        dialog.run()
+        dialog.destroy()
+
+	self.on_save_configuration(self.scale1, config)
+
+if __name__ == "__main__":
+    cm = PreferencesDialog()
+    if cm.run() == Gtk.ResponseType.ACCEPT:
+        cm.close_ok()
+    cm.hide()
+    cm.destroy()
+    exit(0)

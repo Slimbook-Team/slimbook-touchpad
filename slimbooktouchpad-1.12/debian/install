@@ -1,0 +1,17 @@
+slimbooktouchpad /usr/bin/
+debian/changelog /usr/share/slimbooktouchpad/
+comun.py /usr/share/slimbooktouchpad/
+configurator.py /usr/share/slimbooktouchpad/
+slimbooktouchpad.desktop /usr/share/applications/
+slimbooktouchpad-autostart.desktop /usr/share/slimbooktouchpad/
+images/*.png /usr/share/slimbooktouchpad/images/
+images/*.jpg /usr/share/slimbooktouchpad/images
+slimbooktouchpad.png /usr/share/pixmaps/
+preferences /usr/share/slimbooktouchpad/
+preferences2 /usr/share/slimbooktouchpad/
+preferences3 /usr/share/slimbooktouchpad/
+slimbooktouchpad.conf /usr/share/slimbooktouchpad/
+slimbooktouchpad_synaptics.conf /usr/share/slimbooktouchpad/
+startpreferences.py /usr/share/slimbooktouchpad/
+synclient.py /usr/share/slimbooktouchpad/
+SlimbookTouchpadPreferences.desktop /usr/share/applications/
