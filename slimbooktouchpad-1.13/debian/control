@@ -1,0 +1,22 @@
+Source: slimbooktouchpad
+Section: utils
+Priority: extra
+Maintainer: slimbook <sat@slimbook.es>
+Build-Depends: debhelper (>= 9)
+Standards-Version: 3.9.6
+Homepage: <http://slimbook.es>
+
+Package: slimbooktouchpad
+Architecture: all
+Depends: ${misc:Depends}, ${python:Depends}
+	python3,
+	python3-gi,
+	python3-pil,
+	python3-dbus,
+	python-dbus,
+	gir1.2-gtk-3.0,
+	gir1.2-appindicator3-0.1,
+	gir1.2-notify-0.7,
+	hwinfo
+Description: Slimbook Touchpad
+ Tool for enable and disable laptop's touchpad

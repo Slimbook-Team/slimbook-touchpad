@@ -1,0 +1,383 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+import gi
+gi.require_version('Gtk', '3.0')
+from gi.repository import Gtk
+from gi.repository import Gio
+from gi.repository import Gdk
+
+from configurator import Configuration
+
+import os
+from os.path import expanduser
+import shutil
+import getpass
+import ConfigParser
+import subprocess
+import re
+import webbrowser
+import sys
+import time
+
+import comun
+from synclient import Synclient
+
+user = expanduser("~")
+config = ConfigParser.ConfigParser()
+config.read(user + '/.config/slimbooktouchpad/slimbooktouchpad.conf')
+
+class PreferencesDialog(Gtk.Dialog):
+
+	def __init__(self):
+		#
+		Gtk.Dialog.__init__(self, 'Touchpad Indicator | Preferences3',None,Gtk.DialogFlags.MODAL | Gtk.DialogFlags.DESTROY_WITH_PARENT,(Gtk.STOCK_CANCEL, Gtk.ResponseType.REJECT,Gtk.STOCK_OK, Gtk.ResponseType.ACCEPT))
+		self.set_position(Gtk.WindowPosition.CENTER_ALWAYS)
+		#self.set_size_request(400, 230)
+		self.connect('close', self.close_application)
+		#self.set_icon_from_file(comun.ICON)
+		#
+		vbox0 = Gtk.VBox(spacing = 5)
+		vbox0.set_border_width(5)
+		self.get_content_area().add(vbox0)
+		#***************************************************************
+		notebook = Gtk.Notebook.new()
+		vbox0.add(notebook)
+		#***************************************************************
+		vbox1 = Gtk.VBox(spacing = 5)
+		vbox1.set_border_width(5)
+		notebook.append_page(vbox1,Gtk.Label.new('General options'))
+		frame1 = Gtk.Frame()
+		vbox1.pack_start(frame1,False,True, 0)
+		table1 = Gtk.Table(3, 1, False)
+		frame1.add(table1)
+		#***************************************************************
+		label1 = Gtk.Label('Autostart application:')
+		label1.set_alignment(0, 0.5)
+		table1.attach(label1, 0, 1, 0, 1, xpadding=5, ypadding=5)
+		self.switch1 = Gtk.Switch()
+		self.switch1.connect("notify::active", self.on_switch_activated)
+		self.switch1.set_active(self.check_autostart(self.switch1))
+		table1.attach(self.switch1, 1, 2, 0, 1, xpadding=5, ypadding=5, xoptions=Gtk.AttachOptions.SHRINK)
+
+		label1 = Gtk.Label("Start hidden:")
+		label1.set_alignment(0, 0.5)
+		table1.attach(label1, 0, 1, 1, 2, xpadding=5, ypadding=5)
+		self.switch2 = Gtk.Switch()
+		self.switch2.connect("notify::active", self.on_switch_activated2)
+		self.switch2.set_active(self.check_autostart2(self.switch2))
+		table1.attach(self.switch2, 1, 2, 1, 2, xpadding=5, ypadding=5, xoptions=Gtk.AttachOptions.SHRINK)
+
+		label1 = Gtk.Label("Show notifications:")
+		label1.set_alignment(0, 0.5)
+		table1.attach(label1, 0, 1, 2, 3, xpadding=5, ypadding=5)
+		self.switch3 = Gtk.Switch()
+		self.switch3.connect("notify::active", self.on_switch_activated3)
+		self.switch3.set_active(self.check_autostart3(self.switch3))
+		table1.attach(self.switch3, 1, 2, 2, 3, xpadding=5, ypadding=5, xoptions=Gtk.AttachOptions.SHRINK)
+
+		self.checkbutton8 = Gtk.CheckButton.new_with_label('Disable touchpad on typing')
+		self.checkbutton8.connect('toggled',self.on_checkbutton8_toggled)
+		table1.attach(self.checkbutton8,0,1,4,5, xpadding=5, ypadding=5)
+		#
+		self.label_seconds = Gtk.Label('        Milliseconds to wait after the last key press before enabling the touchpad'+':')
+		table1.attach(self.label_seconds,0,1,5,6, xpadding=5, ypadding=5)
+		#
+		self.seconds = Gtk.SpinButton()
+		self.seconds.set_adjustment(Gtk.Adjustment(1000, 100, 10000, 100, 1000, 0))
+		table1.attach(self.seconds,1,2,5,6, xpadding=5, ypadding=5)
+		#***************************************************************
+		vbox4 = Gtk.VBox(spacing = 5)
+		vbox4.set_border_width(5)
+		notebook.append_page(vbox4,Gtk.Label.new('Touchpad configuration'))
+		frame4 = Gtk.Frame()
+		vbox4.pack_start(frame4,True,True,0)
+		table4 = Gtk.Table(9, 2, False)
+		frame4.add(table4)
+		#***************************************************************
+		mbuttons_store = Gtk.ListStore(str)
+		mbuttons = ['None', 'Left mouse button', 'Middle mouse button', 'Right mouse button']
+		for mbutton in mbuttons:
+			mbuttons_store.append([mbutton])
+
+		renderer_text = Gtk.CellRendererText()
+
+		#***************************************************************
+		self.checkbutton41 = Gtk.CheckButton.new_with_label('Vertical scrolling')
+		table4.attach(self.checkbutton41,0,2,0,1, xpadding=5, ypadding=5)
+		self.checkbutton42 = Gtk.CheckButton.new_with_label('Horizontal scrolling')
+		table4.attach(self.checkbutton42,0,2,1,2, xpadding=5, ypadding=5)
+		self.checkbutton43 = Gtk.CheckButton.new_with_label('Circular scrolling')
+		table4.attach(self.checkbutton43,0,2,2,3, xpadding=5, ypadding=5)
+		self.checkbutton44 = Gtk.CheckButton.new_with_label('Two fingers vertical scrolling')
+		table4.attach(self.checkbutton44,0,2,3,4, xpadding=5, ypadding=5)
+		self.checkbutton45 = Gtk.CheckButton.new_with_label('Two fingers horizontal scrolling')
+		table4.attach(self.checkbutton45,0,3,4,5, xpadding=5, ypadding=5)
+		self.checkbutton46 = Gtk.CheckButton.new_with_label('Natural scrolling')
+		table4.attach(self.checkbutton46,0,3,5,6, xpadding=5, ypadding=5)
+
+		self.label_tapping1 = Gtk.Label('Tapping with one finger')
+		self.label_tapping1.set_alignment(0, 0.5)
+		table4.attach(self.label_tapping1,0,1,6,7, xpadding=5, ypadding=5)
+		self.combobox47 = Gtk.ComboBox.new_with_model(mbuttons_store)
+		self.combobox47.pack_start(renderer_text, True)
+		self.combobox47.add_attribute(renderer_text, "text", 0)
+		table4.attach(self.combobox47,2,3,6,7, xpadding=5, ypadding=5)
+
+		self.label_tapping2 = Gtk.Label('Tapping with two fingers')
+		self.label_tapping2.set_alignment(0, 0.5)
+		table4.attach(self.label_tapping2,0,1,7,8, xpadding=5, ypadding=5)
+		self.combobox48 = Gtk.ComboBox.new_with_model(mbuttons_store)
+		self.combobox48.pack_start(renderer_text, True)
+		self.combobox48.add_attribute(renderer_text, "text", 0)
+		table4.attach(self.combobox48,2,3,7,8, xpadding=5, ypadding=5)
+
+		self.label_tapping3 = Gtk.Label('Tapping with three fingers')
+		self.label_tapping3.set_alignment(0, 0.5)
+		table4.attach(self.label_tapping3,0,1,8,9, xpadding=5, ypadding=5)
+		self.combobox49 = Gtk.ComboBox.new_with_model(mbuttons_store)
+		self.combobox49.pack_start(renderer_text, True)
+		self.combobox49.add_attribute(renderer_text, "text", 0)
+		table4.attach(self.combobox49,2,3,8,9, xpadding=5, ypadding=5)
+
+		self.load_preferences()
+		#
+		self.show_all()
+		#
+		#
+		#
+	# *******************************************************************************************************+
+
+	def check_autostart(self, switch1):
+		active = None
+		user = getpass.getuser()
+		if (os.path.isfile("/home/" + user + "/.config/autostart/slimbooktouchpad-autostart.desktop")):
+			active = True
+		else:
+			active = False
+
+		print active
+		return active
+
+	def check_autostart2(self, switch2):
+		stat2 = str(int(config.get('CONFIGURATION', 'hor')))
+		active2 = None
+		user2 = getpass.getuser()
+		if stat2 == '1':
+			active2 = True
+		else:
+			active2 = False
+
+		print active2
+		return active2
+
+	def check_autostart3(self, switch3):
+		stat3 = str(int(config.get('CONFIGURATION', 'icono')))
+		active3 = None
+		user3 = getpass.getuser()
+		if stat3 == '1':
+			active3 = True
+		else:
+			active3 = False
+
+		print active3
+		return active3
+
+	def check_value_max(_):
+		max_velocidad = config.get('CONFIGURATION', 'Velocidad')
+		return max_velocidad
+
+	def on_switch_activated(self, switch1):
+		if switch1.get_active():
+			state = "on"
+			return state
+		else:
+			state = "off"
+			return state
+		print("Switch ", state)
+
+	def on_switch_activated2(self, switch2):
+		if switch2.get_active():
+			state2 = "on"
+			return state2
+		else:
+			state2 = "off"
+			return state2
+		print("Switch ", state2)
+
+	def on_switch_activated3(self, switch3):
+		if switch3.get_active():
+			state3 = "on"
+			return state3
+		else:
+			state3 = "off"
+			return state3
+		print("Switch ", state3)
+
+	def on_checkbutton8_toggled(self,widget):
+		self.label_seconds.set_sensitive(self.checkbutton8.get_active())
+		self.seconds.set_sensitive(self.checkbutton8.get_active())
+
+	def on_checkbutton0_clicked(self,widget,data):
+		self.set_shortcut_sensitive(not widget.get_active())
+
+	def set_shortcut_sensitive(self,sensitive):
+		self.ctrl.set_sensitive(sensitive)
+		self.alt.set_sensitive(sensitive)
+		self.entry11.set_sensitive(sensitive)
+
+	def on_checkbutton3_activate(self,widget):
+		if self.checkbutton3.get_active() and self.checkbutton4.get_active():
+			self.checkbutton4.set_active(False)
+
+	def on_checkbutton4_activate(self,widget):
+		if self.checkbutton3.get_active() and self.checkbutton4.get_active():
+			self.checkbutton3.set_active(False)
+
+	def close_application(self, widget):
+		self.destroy()
+
+	def messagedialog(self,title,message):
+		dialog = Gtk.MessageDialog(None,Gtk.DialogFlags.MODAL,Gtk.MessageType.INFO,buttons=Gtk.ButtonsType.OK)
+		dialog.set_markup("<b>%s</b>" % title)
+		dialog.format_secondary_markup(message)
+		dialog.run()
+		dialog.destroy()
+
+	def close_ok(self):
+		self.save_preferences()
+		stat = self.on_switch_activated(self.switch1)
+		stat2 = self.on_switch_activated2(self.switch2)
+
+		if stat == "on":
+			os.system("cp " + comun.ROOTDIR + "slimbooktouchpad-autostart.desktop ~/.config/autostart/")
+		elif stat == "off":
+			os.system("rm -rf ~/.config/autostart/slimbooktouchpad-autostart.desktop")
+		else:
+			print "Error!!!"
+
+		if stat2 == "off":
+			config.set('CONFIGURATION', 'icono', str(int(1)))
+		elif stat2 == "on":
+			config.set('CONFIGURATION', 'icono', str(int(0)))
+		else:
+			print 'Parámetros erróneos'
+
+		with open(user + '/.config/slimbooktouchpad/slimbooktouchpad.conf', 'wb') as configfile:
+			config.write(configfile)
+
+		configuration = Configuration()
+		synclient = Synclient()
+		if configuration.get('VertTwoFingerScroll'):
+			os.system("synclient VertTwoFingerScroll=1")
+		else:
+			os.system("synclient VertTwoFingerScroll=0")
+
+		if configuration.get('HorizTwoFingerScroll'):
+			os.system("synclient HorizTwoFingerScroll=1")
+		else:
+			os.system("synclient HorizTwoFingerScroll=0")
+
+		if configuration.get('VertEdgeScroll'):
+			os.system("synclient VertEdgeScroll=1")
+			#os.system("synclient RightEdge=3120")
+		else:
+			os.system("synclient VertEdgeScroll=0")
+			#os.system("synclient RightEdge=4000")
+
+		if configuration.get('HorizEdgeScroll'):
+			os.system("synclient HorizEdgeScroll=1")
+			#os.system("synclient BottomEdge=2103")
+		else:
+			os.system("synclient HorizEdgeScroll=0")
+			#os.system("synclient BottomEdge=3000")
+
+		if configuration.get('CircularScrolling'):
+			os.system("synclient CircularScrolling=1")
+		else:
+			os.system("synclient CircularScrolling=0")
+
+		os.system("synclient TapButton1=" + str(configuration.get('TapButton1')))
+		os.system("synclient TapButton2=" + str(configuration.get('TapButton2')))
+		os.system("synclient TapButton3=" + str(configuration.get('TapButton3')))
+
+		if configuration.get('natural_scrolling'):
+			os.system("synclient VertScrollDelta=" + str(-abs(int(synclient.get('VertScrollDelta')))))
+			os.system("synclient HorizScrollDelta=" + str(-abs(int(synclient.get('HorizScrollDelta')))))
+		else:
+			os.system("synclient VertScrollDelta=" + str(abs(int(synclient.get('VertScrollDelta')))))
+			os.system("synclient HorizScrollDelta=" + str(abs(int(synclient.get('HorizScrollDelta')))))
+
+		if configuration.get('disable_on_typing'):
+			os.system("syndaemon -i" + str(configuration.get('seconds')) + " -d")
+		else:
+			os.system("killall syndaemon")
+			os.system("synclient TouchpadOff=0")
+
+
+	def load_preferences(self):
+		configuration = Configuration()
+		first_time = configuration.get('first-time')
+		version = configuration.get('version')
+		if first_time or version != comun.VERSION:
+			configuration.set_defaults()
+			configuration.read()
+
+		if config.get('CONFIGURATION', 'icono')=='1':
+			numero = False
+		else:
+			numero = True
+		self.switch2.set_active(numero)
+		#stat3 = self.on_switch_activated3(self.switch3)
+		self.switch3.set_active(configuration.get('show_notifications'))
+		# self.checkbutton2.set_active(configuration.get('on_mouse_plugged'))
+
+		self.checkbutton8.set_active(configuration.get('disable_on_typing'))
+		self.checkbutton46.set_active(configuration.get('natural_scrolling'))
+		self.seconds.set_value(configuration.get('seconds')*1000)
+		self.label_seconds.set_sensitive(self.checkbutton8.get_active())
+		self.seconds.set_sensitive(self.checkbutton8.get_active())
+
+		self.checkbutton41.set_active(configuration.get('VertEdgeScroll'))
+		self.checkbutton42.set_active(configuration.get('HorizEdgeScroll'))
+		self.checkbutton43.set_active(configuration.get('CircularScrolling'))
+		self.checkbutton44.set_active(configuration.get('VertTwoFingerScroll'))
+		self.checkbutton45.set_active(configuration.get('HorizTwoFingerScroll'))
+		self.combobox47.set_active(configuration.get('TapButton1'))
+		self.combobox48.set_active(configuration.get('TapButton2'))
+		self.combobox49.set_active(configuration.get('TapButton3'))
+
+
+	def save_preferences(self):
+
+		configuration = Configuration()
+		configuration.set('first-time',False)
+		configuration.set('version',comun.VERSION)
+		key=''
+
+		configuration.set('show_notifications',self.switch3.get_active())
+		# configuration.set('on_mouse_plugged',self.checkbutton2.get_active())
+		configuration.set('natural_scrolling',self.checkbutton46.get_active())
+
+		configuration.set('disable_on_typing',self.checkbutton8.get_active())
+		configuration.set('seconds',self.seconds.get_value()/1000)
+		# configuration.set('shortcut',key)
+
+		configuration.set('VertEdgeScroll',self.checkbutton41.get_active())
+		configuration.set('HorizEdgeScroll',self.checkbutton42.get_active())
+		configuration.set('CircularScrolling',self.checkbutton43.get_active())
+		configuration.set('VertTwoFingerScroll',self.checkbutton44.get_active())
+		configuration.set('HorizTwoFingerScroll',self.checkbutton45.get_active())
+		configuration.set('TapButton1',self.combobox47.get_active())
+		configuration.set('TapButton2',self.combobox48.get_active())
+		configuration.set('TapButton3',self.combobox49.get_active())
+		configuration.save()
+
+
+if __name__ == "__main__":
+	cm = PreferencesDialog()
+	if 	cm.run() == Gtk.ResponseType.ACCEPT:
+			cm.close_ok()
+	cm.hide()
+	cm.destroy()
+	exit(0)

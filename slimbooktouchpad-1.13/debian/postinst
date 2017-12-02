@@ -1,0 +1,17 @@
+#!/bin/sh
+# postinst script for slimbooktouchpad
+
+ set -e
+
+ case "$1" in
+    configure)
+        exit 0
+    ;;
+
+    *)
+        echo "postinst called with unknown argument \`$1'" >&2
+        exit 1
+    ;;
+esac
+
+exit 0

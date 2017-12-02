@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Exec=slimbooktouchpad
+Hidden=false
+NoDisplay=false
+X-GNOME-Autostart-enabled=true
+Name[es_ES]=Slimbook Touchpad Autoinicio
+Name=Slimbook Touchpad Autostart
+Comment[es_ES]=Arranque de autoinicio de Slimbook Touchpad
+Comment=Slimbook Touchpad's autostart executable
+X-GNOME-Autostart-Delay=2

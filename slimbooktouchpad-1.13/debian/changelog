@@ -1,0 +1,118 @@
+slimbooktouchpad (1.13beta) xenial; urgency=low
+
+  * Added functionality for Synaptics
+
+ -- slimbook <sat@slimbook.es>  Wed, 28 Sep 2017 13:00:00 +0200
+
+slimbooktouchpad (1.12beta) xenial; urgency=low
+
+  * Solved bugs
+
+ -- slimbook <sat@slimbook.es>  Wed, 23 Aug 2017 12:00:00 +0200
+
+slimbooktouchpad (1.11beta) xenial; urgency=low
+
+  * Solved bugs
+
+ -- slimbook <sat@slimbook.es>  Wed, 09 Aug 2017 10:30:00 +0200
+
+slimbooktouchpad (1.10beta) xenial; urgency=low
+
+  * Solved bugs
+
+ -- slimbook <sat@slimbook.es>  Wed, 24 May 2017 11:30:00 +0200
+
+slimbooktouchpad (1.9beta) xenial; urgency=low
+
+  * Solved bugs
+
+ -- slimbook <sat@slimbook.es>  Tue, 11 May 2017 10:28:00 +0200
+
+slimbooktouchpad (1.8beta) xenial; urgency=low
+
+  * Solved bugs
+
+ -- slimbook <sat@slimbook.es>  Tue, 10 May 2017 12:28:00 +0200
+
+slimbooktouchpad (1.7beta) xenial; urgency=low
+
+  * Solved bugs
+
+ -- slimbook <sat@slimbook.es>  Tue, 27 Apr 2017 11:14:00 +0200
+
+slimbooktouchpad (1.6beta) xenial; urgency=low
+
+  * Solved bugs
+
+ -- slimbook <sat@slimbook.es>  Tue, 26 Apr 2017 11:14:00 +0200
+
+slimbooktouchpad (1.5beta) xenial; urgency=low
+
+  * Solved bugs and new changes
+
+ -- slimbook <sat@slimbook.es>  Tue, 10 Apr 2017 13:29:00 +0200
+
+slimbooktouchpad (1.4beta) xenial; urgency=low
+
+  * Solved bugs
+
+ -- slimbook <sat@slimbook.es>  Tue, 7 Apr 2017 16:29:00 +0200
+
+slimbooktouchpad (1.3beta) xenial; urgency=low
+
+  * New features
+
+ -- slimbook <sat@slimbook.es>  Tue, 7 Apr 2017 11:20:00 +0200
+
+slimbooktouchpad (1.2beta) xenial; urgency=low
+
+  * New features and solved bugs
+
+ -- slimbook <sat@slimbook.es>  Tue, 3 Apr 2017 11:20:00 +0200
+
+slimbooktouchpad (1.0beta) xenial; urgency=low
+
+  * New features
+
+ -- slimbook <sat@slimbook.es>  Tue, 28 Mar 2017 17:50:00 +0200
+ 
+slimbooktouchpad (0.1.5beta) xenial; urgency=low
+
+  * Solved dependencies
+
+ -- slimbook <sat@slimbook.es>  Wed, 20 Jun 2016 11:15:00 +0200
+
+slimbooktouchpad (0.1.4beta) xenial; urgency=low
+
+  * Removed the bug report button
+
+ -- slimbook <sat@slimbook.es>  Wed, 1 Jun 2016 17:15:00 +0200
+
+slimbooktouchpad (0.1.3beta) xenial; urgency=medium
+
+  * Fixed a code bug
+
+ -- slimbook <sat@slimbook.es>  Thu, 19 May 2016 12:50:00 +0200
+
+slimbooktouchpad (0.1.2beta) xenial; urgency=low
+
+  * «Preferences» dialog created
+  * Now you can choose if you want to autostart Slimbook Touchpad
+  * Added compatibility with «ImPS/2 Generic Wheel Mouse" controller
+
+ -- slimbook <sat@slimbook.es>  Thu, 19 May 2016 11:30:00 +0200
+
+slimbooktouchpad (0.1.1beta) xenial; urgency=low
+
+  * Fixed a bug that does not allow Slimbook Touchpad to start correctly on boot
+
+ -- slimbook <sat@slimbook.es>  Thu, 19 May 2016 13:50:00 +0200
+
+slimbooktouchpad (0.1.0beta) xenial; urgency=low
+
+  * Slimbook Touchpad has been created
+  * Added function to unable and disable touchpad
+  * Now you can join our Twitter, Facebook, YouTube Channel and Google+ Accounts!
+  * Don't forget to report bugs with our application indicator
+
+ -- slimbook <sat@slimbook.es>  Wed, 11 May 2016 12:25:00 +0200
