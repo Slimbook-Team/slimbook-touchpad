@@ -11,7 +11,11 @@
 
 For Classic and Katana 1 models, this application allows you to configure the touchpad in basic aspects, such as natural scrolling, tap to click, or tap with 2 or 3 fingers.
 
-
+# Install
+```shell
+   sudo apt-add-repository ppa:slimbook/slimbook
+   sudo apt install slimbook-touchpad
+```
 ### 🏠 [Homepage](https://github.com/slimbook/slimbook-touchpad)
 
 ## Author
